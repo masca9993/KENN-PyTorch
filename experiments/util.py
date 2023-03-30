@@ -20,7 +20,7 @@ def callback_early_stopping(AccList: ArrayLike, min_delta=s.ES_MIN_DELTA, patien
     previous k accuracies (i.e. we check that we are not overfitting). If not, stops learning.
     """
     # No early stopping for 2*patience epochs
-    if len(AccList)//patience < 2:
+    '''if len(AccList)//patience < 2:
         return False
     # Mean loss for last patience epochs and second-last patience epochs
     mean_previous = np.mean(AccList[::-1][patience:2*patience])
@@ -31,12 +31,13 @@ def callback_early_stopping(AccList: ArrayLike, min_delta=s.ES_MIN_DELTA, patien
         print(
             "*CB_ES* Validation Accuracy didn't increase in the last %d epochs" % (patience))
         print("*CB_ES* delta:", delta)
-        return True
+        return True '''
     return False
 
 def loss(predictions: Tensor, labels: Tensor) -> Tensor:
-    l = torch.nn.NLLLoss()
-    return l(predictions, torch.argmax(labels, dim=-1))
+    l = torch.nn.CrossEntropyLoss()
+    return l(predictions, labels)
+    #return l(predictions, torch.argmax(labels, dim=-1))
 
 def train_step_standard(model: Standard, features: Tensor, labels: Tensor, optimizer: Optimizer):
     """

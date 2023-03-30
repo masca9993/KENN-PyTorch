@@ -5,57 +5,54 @@ from experiments.preprocessing import *
 from experiments.util import *
 
 
-def train_and_evaluate_standard(percentage_of_training, verbose=True):
+def train_and_evaluate_standard(verbose=True):
     """
     Trains Standard model with the Training Set, validates on Validation Set
     and evaluates accuracy on the Test Set.
     """
     standard_model = Standard(s.NUMBER_OF_FEATURES)
-
-    optimizer = torch.optim.Adam(standard_model.parameters())
+    optimizer = torch.optim.Adam(standard_model.parameters(), lr=0.01)
 
     # LOADING DATASET
-    features = np.load(s.DATASET_FOLDER + 'features.npy')
-    labels = np.load(s.DATASET_FOLDER + 'labels.npy')
-
-    train_len, samples_in_valid = get_train_and_valid_lengths(
-        features, percentage_of_training)
-
-    features = torch.tensor(features)
-    labels = torch.tensor(labels)
+    features_train = np.genfromtxt(s.DATASET_FOLDER + 'training_features.csv', delimiter=',')
+    features_valid = np.genfromtxt(s.DATASET_FOLDER + 'validation_features.csv', delimiter=',')
+    features_test = np.genfromtxt(s.DATASET_FOLDER + 'test_features.csv', delimiter=',')
+    labels_train = torch.Tensor(np.genfromtxt(s.DATASET_FOLDER + 'training_labels.csv', delimiter=','))
+    labels_valid = torch.Tensor(np.genfromtxt(s.DATASET_FOLDER + 'validation_labels.csv', delimiter=','))
+    labels_test = torch.Tensor(np.genfromtxt(s.DATASET_FOLDER + 'test_labels.csv', delimiter=','))
 
     train_losses = []
     valid_losses = []
     valid_accuracies = []
     train_accuracies = []
 
-    train_indices = range(train_len)
-    valid_indices = range(train_len, train_len + samples_in_valid)
-    test_indices = range(train_len + samples_in_valid, features.shape[0])
+    #train_indices = range(train_len)
+    #valid_indices = range(train_len, train_len + samples_in_valid)
+    #test_indices = range(train_len + samples_in_valid, features.shape[0])
 
     # TRAIN AND EVALUATE STANDARD MODEL
     for epoch in range(s.EPOCHS):
         train_step_standard(
             model=standard_model,
-            features=features[train_indices, :],
-            labels=labels[train_indices, :],
+            features=torch.tensor(features_train, dtype=torch.float32),
+            labels=labels_train,
             optimizer=optimizer
         )
 
-        _, t_predictions = standard_model(features[train_indices, :])
-        t_loss = loss(t_predictions, labels[train_indices, :])
+        _, t_predictions = standard_model(torch.tensor(features_train, dtype=torch.float32))
+        t_loss = loss(t_predictions, labels_train)
 
         v_predictions, v_loss = validation_step_standard(
             model=standard_model,
-            features=features[valid_indices, :],
-            labels=labels[valid_indices, :],
+            features=torch.tensor(features_valid, dtype=torch.float32),
+            labels=labels_valid,
         )
 
         train_losses.append(t_loss)
         valid_losses.append(v_loss)
 
-        t_accuracy = accuracy(t_predictions, labels[train_indices, :]).detach().numpy()
-        v_accuracy = accuracy(v_predictions, labels[valid_indices, :]).detach().numpy()
+        t_accuracy = accuracy(t_predictions, labels_train).detach().numpy()
+        v_accuracy = accuracy(v_predictions, labels_valid).detach().numpy()
 
         train_accuracies.append(t_accuracy)
         valid_accuracies.append(v_accuracy)
@@ -73,11 +70,11 @@ def train_and_evaluate_standard(percentage_of_training, verbose=True):
             print("Terminating training ")
             break
 
-    preactivations_train, _ = standard_model(features[train_indices, :])
-    preactivations_valid, _ = standard_model(features[valid_indices, :])
+    preactivations_train, _ = standard_model(torch.tensor(features_train, dtype=torch.float32))
+    preactivations_valid, _ = standard_model(torch.tensor(features_valid, dtype=torch.float32))
     preactivations_test, predictions_test = standard_model(
-        features[test_indices, :])
-    test_accuracy = accuracy(predictions_test, labels[test_indices, :]).detach().numpy()
+        torch.tensor(features_test, dtype=torch.float32))
+    test_accuracy = accuracy(predictions_test, labels_test).detach().numpy()
     print("Test Accuracy: {}".format(test_accuracy))
 
     nn_results = {

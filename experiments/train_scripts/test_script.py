@@ -89,4 +89,4 @@ if __name__ == '__main__':
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    run_tests(n_runs=100, custom_training_dimensions=[0.10, 0.25, 0.50, 0.75, 0.90], verbose=False)
+    run_tests(n_runs=1, custom_training_dimensions=[0.10, 0.25, 0.50, 0.75, 0.90], verbose=False)

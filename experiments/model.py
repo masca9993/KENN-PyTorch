@@ -13,26 +13,22 @@ class Standard(torch.nn.Module):
         super().__init__()
         self.h1 = Linear(in_features, 50)
         self.d1 = Dropout()
-        self.h2 = Linear(50, 50)
+        self.h2 = Linear(50, 20)
         self.d2 = Dropout()
-        self.h3 = Linear(50, 50)
-        self.d3 = Dropout()
-        self.last_layer = Linear(50, 6)
+        self.last_layer = Linear(20, 6)
 
     def preactivations(self, inputs: torch.Tensor):
         x = torch.relu(self.h1(inputs))
         x = self.d1(x)
         x = torch.relu(self.h2(x))
         x = self.d2(x)
-        x = torch.relu(self.h3(x))
-        x = self.d3(x)
 
         return self.last_layer(x)
 
     def forward(self, inputs: torch.Tensor):
         z = self.preactivations(inputs)
 
-        return z, softmax(z)
+        return z, softmax(z, dim=-1)
 
 
 class Kenn(Standard):
