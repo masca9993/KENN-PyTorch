@@ -38,9 +38,10 @@ class GodelBoostConormApprox(BoostFunction):
 
 class GodelBoostResiduum(BoostFunction):
 
-    def forward(self, selected_predicates: torch.Tensor, signs: [torch.Tensor, torch.Tensor]):
+    def forward(self, selected_predicates: [torch.Tensor, torch.Tensor], signs: [torch.Tensor, torch.Tensor]):
         self.clause_weight.data = torch.clip(self.clause_weight, self.min_weight, self.max_weight)
 
+        # selected predicates here is a list containing two tensors: one for antecedent and one for consequent predicates
         antecedent_matrix = selected_predicates[0] * signs[0]
         consequent_matrix = selected_predicates[1] * signs[1]
 
