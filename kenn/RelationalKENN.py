@@ -67,7 +67,7 @@ class Join(torch.nn.Module):
         u1 = unary[index1]#torch.gather(unary, 0, torch.unsqueeze(index1, -1))
         u2 = unary[index2]
 
-        return torch.cat([u1, u2, torch.unsqueeze(binary, 1)], dim=1)
+        return torch.cat([u1, u2, binary], dim=1)
 
 class RelationalKenn(torch.nn.Module):
 
