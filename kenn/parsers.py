@@ -55,11 +55,16 @@ def relational_parser(knowledge_file: str, activation=lambda x: x, initial_claus
 
     unary_clauses = []
     binary_clauses = []
-    implication_clauses = []
+    implication_unary_clauses = []
+    implication_binary_clauses = []
 
     reading_unary = True
     reading_binary = True
+    reading_implication_unary = True
     for clause in clauses:
+        if clause[0] == '>' and not reading_binary:
+            reading_implication_unary = False
+            continue
         if clause[0] == '>' and not reading_unary:
             reading_binary = False
             continue
@@ -71,15 +76,17 @@ def relational_parser(knowledge_file: str, activation=lambda x: x, initial_claus
             unary_clauses.append(clause)
         elif reading_binary:
             binary_clauses.append(clause)
+        elif reading_implication_unary:
+            implication_unary_clauses.append(clause)
         else:
-            implication_clauses.append(clause)
+            implication_binary_clauses.append(clause)
 
     return RelationalKenn(
         u_groundings,
         b_groundings,
         unary_clauses,
         binary_clauses,
-        implication_clauses,
+        [implication_unary_clauses, implication_binary_clauses],
         activation,
         initial_clause_weight,
         boost_function=boost_function)

@@ -1,7 +1,7 @@
 import torch
 from kenn.ClauseEnhancer import ClauseEnhancer, ClauseEnhancerImpl
 
-from kenn.boost_functions import GodelBoostConormApprox, GodelBoostConorm, GodelBoostResiduum
+from kenn.boost_functions import GodelBoostConormApprox, GodelBoostConorm, GodelBoostResiduum, GodelBoostResiduumApprox
 
 
 class KnowledgeEnhancer(torch.nn.Module):
@@ -27,7 +27,7 @@ class KnowledgeEnhancer(torch.nn.Module):
         if not implication:
             for index, clause in enumerate(clauses):
                 enhancer = ClauseEnhancer(
-                    predicates, clause[:-1], initial_clause_weight, boost_function=boost_function)
+                    predicates, clause[:-1], initial_clause_weight, boost_function=GodelBoostConorm)
                 self.clause_enhancers.append(enhancer)
                 self.add_module(f'clause-{index}', enhancer)
         else:

@@ -1,1 +1,1 @@
-from .boost import BoostFunction, GodelBoostConorm, GodelBoostConormApprox, LukasiewiczBoostConorm, ProductBoostConorm, GodelBoostResiduum
+from .boost import BoostFunction, GodelBoostConorm, GodelBoostConormApprox, LukasiewiczBoostConorm, ProductBoostConorm, GodelBoostResiduum, GodelBoostResiduumApprox

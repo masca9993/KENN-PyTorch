@@ -75,7 +75,7 @@ class RelationalKenn(torch.nn.Module):
                  binary_predicates: [str],
                  unary_clauses: [str],
                  binary_clauses: [str],
-                 implication_clauses: [str],
+                 implication_clauses: [str, str],
                  activation=lambda x: x,
                  initial_clause_weight=0.5,
                  boost_function=GodelBoostConorm):
@@ -99,14 +99,16 @@ class RelationalKenn(torch.nn.Module):
 
         self.unary_clauses = unary_clauses
         self.binary_clauses = binary_clauses
-        self.implication_clauses = implication_clauses
+        self.implication_unary_clauses = implication_clauses[0]  # implication unary clauses are passed as first element in the list
+        self.implication_binary_clauses = implication_clauses[1]  # implication binary clauses are passed as first element in the list
         self.activation = activation
 
         self.unary_ke = None
         self.binary_ke = None
-        self.implication_ke = None
-        self.join = None
-        self.group_by = None
+        self.implication_unary_ke = None
+        self.implication_binary_ke = None
+        self.join = Join()
+        self.group_by = GroupBy(len(unary_predicates))
 
         if len(self.unary_clauses) != 0:
 
@@ -115,15 +117,16 @@ class RelationalKenn(torch.nn.Module):
         if len(self.binary_clauses) != 0:
             self.binary_ke = KnowledgeEnhancer(
                 binary_predicates, self.binary_clauses, initial_clause_weight=initial_clause_weight, boost_function=boost_function)
-            self.join = Join()
-            self.group_by = GroupBy(len(unary_predicates))
 
-        if len(self.implication_clauses) != 0:
-            self.implication_ke = KnowledgeEnhancer(
-                binary_predicates, self.implication_clauses, initial_clause_weight=initial_clause_weight,
-                boost_function=boost_function, implication=True)
-            self.join = Join()
-            self.group_by = GroupBy(len(unary_predicates))
+        if len(self.implication_unary_clauses) != 0:
+            self.implication_unary_ke = KnowledgeEnhancer(
+                unary_predicates, self.implication_unary_clauses, initial_clause_weight=initial_clause_weight,
+                implication=True, boost_function=boost_function)
+
+        if len(self.implication_binary_clauses) != 0:
+            self.implication_binary_ke = KnowledgeEnhancer(
+                binary_predicates, self.implication_binary_clauses,
+                initial_clause_weight=initial_clause_weight, implication=True, boost_function=boost_function)
 
 
     def forward(self, unary: torch.Tensor, binary: torch.Tensor, index1: torch.Tensor, index2: torch.Tensor) \
@@ -151,19 +154,24 @@ class RelationalKenn(torch.nn.Module):
             delta_up = torch.zeros(u.shape)
             delta_bp = torch.zeros(binary.shape)
 
-        if len(self.implication_clauses) != 0 and len(binary) != 0:
+        if len(self.implication_unary_clauses) != 0:
+            deltas_sum, deltas_u_list = self.implication_unary_ke(unary)
+            u_impl = u + deltas_sum
+        else:
+            u_impl = u
+
+        if len(self.implication_binary_clauses) != 0:
             joined_matrix = self.join(u, binary, index1, index2)
-            deltas_sum, deltas_b_list = self.implication_ke(joined_matrix)
+            deltas_sum, deltas_b_list = self.implication_binary_ke(joined_matrix)
+            delta_impl_up, delta_impl_bp = self.group_by(
+                u, deltas_sum, index1, index2)
+        else:
+            delta_impl_up = torch.zeros(u.shape)
+            delta_impl_bp = torch.zeros(binary.shape)
 
-            delta_up, delta_bp = self.group_by(u, deltas_sum, index1, index2)
-        elif len(self.implication_clauses) != 0 and len(binary) == 0:
-            deltas_sum, deltas_u_list = self.implication_ke(unary)
-            u = unary + deltas_sum
-
-        #print(delta_up)
-        #print(torch.squeeze(u + delta_up))
-        #print(torch.squeeze(binary + delta_bp))
-        return self.activation(u + delta_up), self.activation(binary + delta_bp)
+        print(u_impl + delta_up + delta_impl_up)
+        print(binary + delta_bp + delta_impl_bp)
+        return self.activation(u_impl + delta_up + delta_impl_up), self.activation(binary + delta_bp + delta_impl_bp)
 
     # This doesn't seem to have a PyTorch correspondence
     # def get_config(self):

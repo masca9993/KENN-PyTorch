@@ -189,7 +189,6 @@ class ClauseEnhancerImpl(torch.nn.Module):
 
         # [b, 2|U|+|B|]
         scattered_delta = torch.zeros_like(ground_atoms)
-
-        scattered_delta[..., self.antecedent_literal_indices + self.consequent_literal_indices] = delta
+        scattered_delta[..., self.consequent_literal_indices] = delta
 
         return scattered_delta, delta
