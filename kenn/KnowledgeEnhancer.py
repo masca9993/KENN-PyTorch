@@ -6,7 +6,8 @@ from kenn.boost_functions import GodelBoostConormApprox, GodelBoostConorm, Godel
 
 class KnowledgeEnhancer(torch.nn.Module):
 
-    def __init__(self, predicates: [str], clauses: [str], initial_clause_weight=0.5, save_training_data=False, boost_function=GodelBoostConormApprox, implication=False):
+    def __init__(self, predicates: [str], clauses: [str], initial_clause_weight=0.5, save_training_data=False,
+                 implication=False, approx=False):
         """Initialize the knowledge base.
         :param predicates: a list of predicates names
         :param clauses: a list of constraints. Each constraint is a string on the form:
@@ -27,14 +28,17 @@ class KnowledgeEnhancer(torch.nn.Module):
         if not implication:
             for index, clause in enumerate(clauses):
                 enhancer = ClauseEnhancer(
-                    predicates, clause[:-1], initial_clause_weight, boost_function=GodelBoostConorm)
+                    predicates, clause[:-1], initial_clause_weight,
+                    boost_function=GodelBoostConormApprox if approx else GodelBoostConorm)
                 self.clause_enhancers.append(enhancer)
                 self.add_module(f'clause-{index}', enhancer)
         else:
             for index, clause in enumerate(clauses):
-                # Clause Enhancer for Implication is automatically initialized with GodelBoostResiduum
+                ''' Clause Enhancer for Implication is initialized with GodelBoostResiduum or GodelBoostResiduumApprox
+                based on boolean parameter "approx" specified on parser '''
                 enhancer = ClauseEnhancerImpl(
-                    predicates, clause[:-1], initial_clause_weight, boost_function=GodelBoostResiduum)
+                    predicates, clause[:-1], initial_clause_weight,
+                    boost_function=GodelBoostResiduumApprox if approx else GodelBoostResiduum)
                 self.clause_enhancers.append(enhancer)
                 self.add_module(f'clause-{index}', enhancer)
 

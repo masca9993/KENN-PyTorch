@@ -34,7 +34,7 @@ def unary_parser_ke(knowledge_file: str, initial_clause_weight=0.5, boost_functi
     return KnowledgeEnhancer(predicates, clauses, initial_clause_weight, boost_function=boost_function)
 
 
-def relational_parser(knowledge_file: str, activation=lambda x: x, initial_clause_weight=0.5, boost_function=GodelBoostConormApprox):
+def relational_parser(knowledge_file: str, activation=lambda x: x, initial_clause_weight=0.5, approx=False):
     """
     Takes in input the knowledge file containing both unary and binary clauses and returns a RelationalKenn
     Layer, with input the predicates and clauses found in the knowledge file.
@@ -52,6 +52,7 @@ def relational_parser(knowledge_file: str, activation=lambda x: x, initial_claus
                    [u + '(y)' for u in unary_literals_string[:-1].split(',')] + \
                    [b + '(x.y)' for b in binary_literals_string[:-1].split(',')] + \
                    [b + '(y.x)' for b in binary_literals_string[:-1].split(',')]
+
 
     unary_clauses = []
     binary_clauses = []
@@ -89,4 +90,4 @@ def relational_parser(knowledge_file: str, activation=lambda x: x, initial_claus
         [implication_unary_clauses, implication_binary_clauses],
         activation,
         initial_clause_weight,
-        boost_function=boost_function)
+        approx=approx)

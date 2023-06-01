@@ -78,7 +78,7 @@ class RelationalKenn(torch.nn.Module):
                  implication_clauses: [str, str],
                  activation=lambda x: x,
                  initial_clause_weight=0.5,
-                 boost_function=GodelBoostConorm):
+                 approx=False):
         """Initialize the knowledge base.
         :param unary_predicates: the list of unary predicates names
         :param binary_predicates: the list of binary predicates names
@@ -113,20 +113,20 @@ class RelationalKenn(torch.nn.Module):
         if len(self.unary_clauses) != 0:
 
             self.unary_ke = KnowledgeEnhancer(
-                unary_predicates, self.unary_clauses, initial_clause_weight=initial_clause_weight, boost_function=boost_function)
+                unary_predicates, self.unary_clauses, initial_clause_weight=initial_clause_weight, approx=approx)
         if len(self.binary_clauses) != 0:
             self.binary_ke = KnowledgeEnhancer(
-                binary_predicates, self.binary_clauses, initial_clause_weight=initial_clause_weight, boost_function=boost_function)
+                binary_predicates, self.binary_clauses, initial_clause_weight=initial_clause_weight, approx=approx)
 
         if len(self.implication_unary_clauses) != 0:
             self.implication_unary_ke = KnowledgeEnhancer(
                 unary_predicates, self.implication_unary_clauses, initial_clause_weight=initial_clause_weight,
-                implication=True, boost_function=boost_function)
+                implication=True, approx=approx)
 
         if len(self.implication_binary_clauses) != 0:
             self.implication_binary_ke = KnowledgeEnhancer(
                 binary_predicates, self.implication_binary_clauses,
-                initial_clause_weight=initial_clause_weight, implication=True, boost_function=boost_function)
+                initial_clause_weight=initial_clause_weight, implication=True, approx=approx)
 
 
     def forward(self, unary: torch.Tensor, binary: torch.Tensor, index1: torch.Tensor, index2: torch.Tensor) \
@@ -169,8 +169,6 @@ class RelationalKenn(torch.nn.Module):
             delta_impl_up = torch.zeros(u.shape)
             delta_impl_bp = torch.zeros(binary.shape)
 
-        print(u_impl + delta_up + delta_impl_up)
-        print(binary + delta_bp + delta_impl_bp)
         return self.activation(u_impl + delta_up + delta_impl_up), self.activation(binary + delta_bp + delta_impl_bp)
 
     # This doesn't seem to have a PyTorch correspondence
